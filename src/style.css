@@ -1,0 +1,30 @@
+:root
+{
+  font: 1em "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+h1 {
+  font-size: 2em;
+  margin-bottom: 0.5em;
+}
+.card {
+  font-size: 1em;
+  padding: 0.5em 1em;
+  cursor: pointer;
+  background-color: #0099ff;
+  border: none;
+  border-radius: 5px;
+  display: inline-block;
+}
+#header {
+  margin-bottom: 1em;
+  background-color: #0099ff;
+  display: flex;
+  padding:1%;
+  color : white;
+}
+body {
+  margin: 0%;
+  text-align: center;
+  padding: 0%;
+
+}
