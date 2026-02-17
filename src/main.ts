@@ -65,6 +65,13 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 // デバイスを認識、HandleInputs関数で入力を処理
 document.getElementById('connectButton')!.addEventListener('click', async () => {
   console.log('Requesting device...');
+    if(window.analogsense){
+      console.log('AnalogSense API is available.');
+    }else{
+      console.error('AnalogSense API is not available.');
+      alert("AnalogSense API is not available in this browser.");
+      return;
+    }
     if("hid" in window.navigator)
     {
       await window.analogsense.requestDevice().then((device: Device | undefined) => {
