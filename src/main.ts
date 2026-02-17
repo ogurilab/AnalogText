@@ -122,14 +122,18 @@ function handleInputs(inputs: KeyInput[]) {
         // 結果データに追加
         resultData.push({key: key, values: values.slice()});
         let maxDepth=0;
+        let maxindex=0;
+        let i=0;
         values.forEach((value)=>{
           if(value.x>maxDepth){
             maxDepth=value.x;
+            maxindex=i;
+            i++;
           }
         });
         console.log(`Max Depth: ${maxDepth}`);
         let avragevelocity=0;
-        const timeToBottom=values[values.length-1].y - values[0].y;
+        const timeToBottom=values[maxindex].y - values[0].y;
         if (timeToBottom > 0) {
           avragevelocity = maxDepth / timeToBottom;
         } else {
