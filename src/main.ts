@@ -1,4 +1,5 @@
-import type { Device, KeyInput } from './analogsense';
+import type { Device, KeyInput } from '../public/analogsense';
+import { onKeyEvent } from './Fakeinput/main';
 
 import './style.css'
 
@@ -18,8 +19,7 @@ const threshold = 0.1;  // 押し込み具合の閾値
 let outputMulti = 4; // ヒートマップ出力の係数
 let isVelocity=true;  // 速度モードかどうかのフラグ
 
-// ログ用の変数
-let logArea="";
+
 
 // mapデータ保存用の配列(x=押し込み具合、y=Δt)
 type num2={
@@ -52,9 +52,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <div id= "connect">
       <button id="connectButton">Connect to Analog Text Device</button>
     </div>
-    <div id="outputArea">
-      
-    </div>
+    
 
     <div>
       <label for="isVelocity">Velocity Mode</label>
@@ -67,15 +65,27 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 // デバイスを認識、HandleInputs関数で入力を処理
 document.getElementById('connectButton')!.addEventListener('click', async () => {
   console.log('Requesting device...');
-    await window.analogsense.requestDevice().then((device: Device | undefined) => {
+    if("hid" in window.navigator)
+    {
+      await window.analogsense.requestDevice().then((device: Device | undefined) => {
       if (device) {
+        
         console.log(`Connected to device: ${device.getProductName()}`);
         device.startListening(handleInputs);
       } else {
         console.log('No device selected.');
       }
+      }).catch((error: any) => {
+        console.error('Error connecting to device:', error);
+      });
+
+    }
+    else
+    {
+      alert("WebHID API is not supported in this browser."); 
+    }
     
-  });
+    
 });
 
 
@@ -104,6 +114,23 @@ function handleInputs(inputs: KeyInput[]) {
         console.log(`Key ${key} released`);
         // 結果データに追加
         resultData.push({key: key, values: values.slice()});
+        let maxDepth=0;
+        values.forEach((value)=>{
+          if(value.x>maxDepth){
+            maxDepth=value.x;
+          }
+        });
+        console.log(`Max Depth: ${maxDepth}`);
+        let avragevelocity=0;
+        const timeToBottom=values[values.length-1].y - values[0].y;
+        if (timeToBottom > 0) {
+          avragevelocity = maxDepth / timeToBottom;
+        } else {
+          avragevelocity = 0;
+        }
+        console.log(`Avrage Velocity: ${avragevelocity}`);
+
+        onKeyEvent(key,`velocity:${avragevelocity},depth:${maxDepth}` );
         // 押し込みデータをリセット
         mapData[key] = [];
         // 結果データをhtmlに出力
@@ -129,47 +156,38 @@ document.getElementById('isVelocity')!.addEventListener('change', (event)=>{
 // 結果データをhtmlに出力する関数
 function OutputResultData()
 {
-  let outputArea=document.getElementById('outputArea');
-  if(!outputArea){
-    outputArea=document.createElement('div');
-    outputArea.id='outputArea';
-    document.body.appendChild(outputArea);
+  let inputArea=document.getElementById('inputArea');
+  if(!inputArea){
+    inputArea=document.createElement('div');
+    inputArea.id='inputArea';
+    document.body.appendChild(inputArea);
   }
-  logArea="";
-  resultData.forEach((data)=>{
-    
-    //キーをが底を打った時間を除外して、押し込みはじめから底を打つまでの平均速度を計算
-    let avragevelocity=0;
-    //キーが一番深く押されたときの値とインデックスを保存
-    let maxdepth=0;
-    let maxindex=0;
-    data.values.forEach((value, index)=>{
-      if(value.x>maxdepth){
-        maxdepth=value.x;
-        maxindex=index;
+  
+  inputArea.childNodes.forEach((node)=>{
+    if(node.nodeType===Node.ELEMENT_NODE){
+      const element=node as HTMLElement;
+
+      const tag=element.dataset.tag;
+      if(!tag){
+        return;
       }
-    });
-    //底を打つまでの時間を計算
-    const timeToBottom=data.values[maxindex].y - data.values[0].y;
-    //平均速度を計算（timeToBottom が 0 以下の場合は 0 とする）
-    if (timeToBottom > 0) {
-      avragevelocity = maxdepth / timeToBottom;
-    } else {
-      avragevelocity = 0;
+      const [velocityStr,depthStr]=tag.split(',');
+      const avragevelocity=parseFloat(velocityStr.split(':')[1]);
+      const maxDepth=parseFloat(depthStr.split(':')[1]);
+      //0~240の範囲に変換
+      const hue=Math.min(240, Math.floor(avragevelocity * outputMulti * 240));
+      
+      // velocityモードの場合は平均速度、depthモードの場合は最大押し込み具合で色を決定
+      const valueForHue=isVelocity ? hue : Math.min(240, Math.floor(maxDepth  * 240));
+      element.style.color = `hsl(${240-valueForHue}, 100%, 50%)`;
+      // 押し込みデータに基づいて色を決定し、表示用のHTMLを生成
+      
     }
-    //0~240の範囲に変換
-    const hue=Math.min(240, Math.floor(avragevelocity * outputMulti * 240));
-    const maxDepthValue=data.values[maxindex].x;
-    // velocityモードの場合は平均速度、depthモードの場合は最大押し込み具合で色を決定
-    const valueForHue=isVelocity ? hue : Math.min(240, Math.floor(maxDepthValue  * 240));
-
-    // 押し込みデータに基づいて色を決定し、表示用のHTMLを生成
-    logArea+=`<div style="background-color: hsl(${240 - valueForHue},100%,50%); display:inline;">${data.key}</div>`;
-    
   });
+  
 
-  // 生成した HTML を DOM に反映する（これが抜けているのが表示されない原因）
-  outputArea.innerHTML = logArea;
+  
+  
 }
 
 
