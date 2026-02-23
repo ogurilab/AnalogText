@@ -27,7 +27,7 @@ const keyToTextMap: KeyToTextMap = {
     'ArrowDown': '\u2193',
     'ArrowLeft': '\u2190',
     'ArrowRight': '\u2192',
-    ' ': '\u00A0',
+    'Space': '\u00A0',
     
   
   // ... 他のキーとテキストのマッピング
