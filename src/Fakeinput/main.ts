@@ -9,6 +9,18 @@ document.querySelector<HTMLDivElement>('#CustomIME')!.innerHTML = `
   </div>
   
 `
+let isUpperCase = false;
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Shift') {
+    isUpperCase = true;
+  }
+});
+
+document.addEventListener('keyup', (event) => {
+  if (event.key === 'Shift') {
+    isUpperCase = false;
+  }
+});
 
 const inputArea = document.getElementById('inputArea') as HTMLDivElement;
 const cursor ='|';
@@ -53,9 +65,11 @@ export function onKeyEvent(key: string,tag?:string) {
     
     cursorElement.before(textElement);
     return;
+  }else if (key === 'Shift') {
+    return;
   }
   
-  const text = keyToText(key);
+  const text = isUpperCase ? keyToText(key).toUpperCase() : keyToText(key).toLowerCase();
   const textElement= document.createElement('span');
   textElement.textContent = text;
   textElement.dataset.tag = tag || '';

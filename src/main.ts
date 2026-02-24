@@ -140,6 +140,7 @@ function handleInputs(inputs: KeyInput[]) {
           avragevelocity = 0;
         }
         console.log(`Avrage Velocity: ${avragevelocity}`);
+        
 
         onKeyEvent(key,`velocity:${avragevelocity},depth:${maxDepth}` );
         // 押し込みデータをリセット
