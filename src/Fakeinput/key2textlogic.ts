@@ -19,7 +19,7 @@ const keyToTextMap: KeyToTextMap = {
   'Backspace': '',
     'Enter': '\n',
     'Tab': '\t',
-    'Shift': '\u21e7',
+    'LeftShift': '',
     'Control': '\u2303',
     'Alt': '\u2325',
     'Escape': '\u238b',
