@@ -1,4 +1,4 @@
-const keys = [
+export const keys = [
     { "name": "Escape", "wooting": 0x29, "razer": 0x6E },
     { "name": "F1", "wooting": 0x3A, "razer": 0x70 },
     { "name": "F2", "wooting": 0x3B, "razer": 0x71 },

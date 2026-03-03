@@ -23,4 +23,11 @@ declare global {
   }
 }
 
+export interface keys {
+  name: string;
+  wooting: number;
+  razer: number;
+};
+export const keys: keys[];
+
 export {};

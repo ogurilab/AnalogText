@@ -13,6 +13,9 @@
     "vite": "^7.3.1"
   },
   "dependencies": {
-    "@types/node": "^25.2.3"
+    "@koozaki/romaji-conv": "^2.0.35",
+    "@types/koozaki__romaji-conv": "^2.0.2",
+    "@types/node": "^25.2.3",
+    "umap-js": "^1.4.0"
   }
 }
