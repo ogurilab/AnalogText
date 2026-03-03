@@ -41,11 +41,7 @@ type keydata = {
 const resultData:keydata[] = [];
 // 計測用タイマー変数。最初の描画からの経過時間をmsで保存
 
-let time=0;
-const timer=setInterval(() => {
-  time+=1;
-}, 1);;
-timer;
+
 
 
 
@@ -69,6 +65,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       <label for="heatmap">Heatmap Output Multiplier: ${outputMulti}</label>
       <input type="range" id="heatmap" min="1" max="1000" step="0.01" value="${outputMulti}">
     </div>
+    gfdssdgfgdfssdsg
 
   </div>
 `
@@ -122,15 +119,22 @@ document.getElementById('connectButton')!.addEventListener('click', async () => 
 });
 
 
-
+let Gprevtime=0;
 // 入力を処理する関数
 function handleInputs(inputs: KeyInput[]) {
+  const time=performance.now();
   inputs.forEach((input: { scancode: number; value: number }) => {
+    
     const key = window.analogsense.scancodeToString(input.scancode);
-    console.log(`Key: ${key}, Value: ${input.value}`);
+    //console.log(`Key: ${key}, Value: ${input.value},dt:${time-Gprevtime},len:${mapData[key]?.length||0}`);
+    Gprevtime=time;
     let num2={x:input.value,y: time};
     if(!mapData[key]){
       mapData[key]=[];
+    }
+    if(input.value < threshold){
+      mapData[key]=[];
+  
     }
     // もし押し込み具合が閾値以上なら、押し込みデータに追加
     if(input.value >= threshold)
@@ -138,37 +142,24 @@ function handleInputs(inputs: KeyInput[]) {
       mapData[key].push(num2);
     }
       
-    // 押し込み具合が閾値以下かつ前回の押し込み具合が閾値以上の場合、もしくはキーがそこを打った場合キーが離されたと判断
+    // 押し込み具合が前回の物から下降している、もしくはキーがそこを打った場合キー打たれたと判断
     const values=mapData[key];
+    console.log(`key: ${key}, len: ${values.length}`);
     const len=values.length;
     if(len>=3){
       const currentValue=values[len-1].x;
       const prevValue=values[len-2].x;
-      const prepreValue=values[len-3] ? values[len-3].x : 0;
-      if((prevValue>currentValue&&prepreValue<prevValue)){
+      const prevTime=values[len-2].y-values[0].y;
+      const prepreValue=values[len-3].x;
+      if((prepreValue<=prevValue&&prevValue>currentValue)){
         // キーが離されたときの処理
         console.log(`Key ${key} released`);
         // 結果データに追加
         resultData.push({key: key, values: values.slice()});
-        let maxDepth=0;
-        let maxindex=0;
-        let i=0;
-        values.forEach((value)=>{
-          if(value.x>maxDepth){
-            maxDepth=value.x;
-            maxindex=i;
-            i++;
-          }
-        });
-        console.log(`Max Depth: ${maxDepth}`);
-        let avragevelocity=0;
-        const timeToBottom=values[maxindex].y - values[0].y;
-        if (timeToBottom > 0) {
-          avragevelocity = maxDepth / timeToBottom;
-        } else {
-          avragevelocity = 0;
-        }
-        console.log(`Avrage Velocity: ${avragevelocity}`);
+        const avragevelocity=prevValue/(prevTime==0 ? 0.00001 : prevTime);
+        const maxDepth=prevValue;
+        console.log(`Velocity: ${avragevelocity}, Depth: ${maxDepth},time:${prevTime}`);
+        
         
         //キーイベントをFakeInputに送信
         if(key===imeToggleKey){
@@ -187,6 +178,24 @@ function handleInputs(inputs: KeyInput[]) {
     }
 
 
+
+  });
+  document.querySelector('#keymap')!.innerHTML='';
+  let keymap=document.querySelector('#keymap')!;
+  Object.keys(mapData).forEach((key)=>{
+    const values=mapData[key];
+    const lastValue=values[values.length-1];
+    if(!lastValue){
+      keymap.innerHTML+=`<div>${key}: No data</div>`;
+      return;
+
+    }
+    const keyElement=document.createElement('meter')as HTMLMeterElement;
+    keyElement.min=0;
+    keyElement.max=100;
+    keyElement.value=lastValue.x*100;
+    
+    keymap.appendChild(keyElement);
   });
 };
 document.getElementById('heatmap')!.addEventListener('input', (event)=>{
@@ -199,6 +208,7 @@ document.getElementById('heatmap')!.addEventListener('input', (event)=>{
 // 結果データをhtmlに出力する関数
 function OutputResultData()
 {
+  
   let inputArea=document.getElementById('inputArea');
   if(!inputArea){
     inputArea=document.createElement('div');
@@ -245,7 +255,8 @@ function ReloadIMEList(){
       const inputDiv=document.getElementById('inputArea') as HTMLDivElement;
       // inputArea内のspan要素をすべて取得
       const spans = inputDiv.querySelectorAll('span');
-      const compositionText = Array.from(spans).map(span => span.textContent).join('').slice(0, -1)+','; // 最後のカーソルを除外し、変換が区切られない様にする
+      const compositionElement = Array.from(spans).filter(span => (span.dataset.tag&&span.dataset.composition&&span.dataset.composition === 'true'));
+      const compositionText = Array.from(compositionElement).map(span => span.textContent).join('').slice(0, -1)+','; // 最後のカーソルを除外し、変換が区切られない様にする
       const composititonHiragana=romajiConv(compositionText).toHiragana();
       const httpRequest = new XMLHttpRequest();
       httpRequest.open('GET', `https://www.google.com/transliterate?langpair=ja-Hira|ja&text=${encodeURIComponent(composititonHiragana)}`);
