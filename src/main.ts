@@ -248,7 +248,7 @@ function ReloadIMEList(){
       const compositionText = Array.from(spans).map(span => span.textContent).join('').slice(0, -1)+','; // 最後のカーソルを除外し、変換が区切られない様にする
       const composititonHiragana=romajiConv(compositionText).toHiragana();
       const httpRequest = new XMLHttpRequest();
-      httpRequest.open('GET', `http://www.google.com/transliterate?langpair=ja-Hira|ja&text=${encodeURIComponent(composititonHiragana)}`);
+      httpRequest.open('GET', `https://www.google.com/transliterate?langpair=ja-Hira|ja&text=${encodeURIComponent(composititonHiragana)}`);
       httpRequest.onreadystatechange = () => {
         if (httpRequest.readyState === XMLHttpRequest.DONE) {
           if (httpRequest.status === 200) {
