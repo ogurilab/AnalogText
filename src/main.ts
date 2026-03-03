@@ -57,16 +57,14 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <select id="modeSelect"></select>
 
     
-    <div id="IME_List">
-    </div>
+    
     <div>
       <label for="isVelocity">Velocity Mode</label>
       
       <label for="heatmap">Heatmap Output Multiplier: ${outputMulti}</label>
       <input type="range" id="heatmap" min="1" max="1000" step="0.01" value="${outputMulti}">
     </div>
-    gfdssdgfgdfssdsg
-
+   
   </div>
 `
 
@@ -164,9 +162,19 @@ function handleInputs(inputs: KeyInput[]) {
         //キーイベントをFakeInputに送信
         if(key===imeToggleKey){
           ToggleIME();
+        }
+        else if(IsIMEActive()&& IsinComposition()&&(key=== 'Enter'|| key==='Space')){
+          if(key==='Enter'){
+            endComposition();
+          }
+          if(key==='Space'){
+            IMENext();
+          }
         }else{
           onKeyEvent(key,`velocity:${avragevelocity},depth:${maxDepth}` );
+          setTimeout(() => {
           ReloadIMEList();
+        }, 100);
         }
         
 
@@ -251,12 +259,16 @@ function ReloadIMEList(){
       return;
     }
     imeList.innerHTML='';
+
     if(IsIMEActive()&& IsinComposition()){
       const inputDiv=document.getElementById('inputArea') as HTMLDivElement;
       // inputArea内のspan要素をすべて取得
       const spans = inputDiv.querySelectorAll('span');
       const compositionElement = Array.from(spans).filter(span => (span.dataset.tag&&span.dataset.composition&&span.dataset.composition === 'true'));
-      const compositionText = Array.from(compositionElement).map(span => span.textContent).join('').slice(0, -1)+','; // 最後のカーソルを除外し、変換が区切られない様にする
+      if(compositionElement.length===0){
+        return;
+      }
+      const compositionText = Array.from(compositionElement).map(span => span.textContent).join('')+','; // 最後のカーソルを除外し、変換が区切られない様にする
       const composititonHiragana=romajiConv(compositionText).toHiragana();
       const httpRequest = new XMLHttpRequest();
       httpRequest.open('GET', `https://www.google.com/transliterate?langpair=ja-Hira|ja&text=${encodeURIComponent(composititonHiragana)}`);
@@ -317,6 +329,27 @@ function ReloadIMEList(){
       httpRequest.send();
     }
 
+  }
+  function IMENext(){
+    const imeList=document.getElementById('IME_List');
+    if(!imeList){
+      return;
+    }
+    const buttons=imeList.querySelectorAll('button');
+    if(buttons.length===0){
+      return;
+    }
+    const activeElement=document.activeElement;
+    let nextIndex=0;
+    buttons.forEach((button,index)=>{
+      if(button===activeElement){
+        nextIndex=index+1;
+      }
+    });
+    if(nextIndex>=buttons.length){
+      nextIndex=0;
+    }
+    (buttons[nextIndex] as HTMLButtonElement).focus();
   }
 
 

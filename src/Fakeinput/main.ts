@@ -65,6 +65,9 @@ const cursorElement = document.createElement('span');
 cursorElement.textContent = cursor;
 cursorElement.style.animation = 'blinking 0.5s ease-in-out infinite alternate';
 cursorElement.id = 'cursorElement';
+const IMEListElement=document.createElement('div');
+IMEListElement.id='IME_List';
+cursorElement.appendChild(IMEListElement);
 const endElement = document.createElement('span') as HTMLSpanElement;
 endElement.id = 'endElement';
 endElement.textContent = '\u00A0'; // スペースを表示するための特殊文字
