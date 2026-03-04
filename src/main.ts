@@ -117,7 +117,7 @@ document.getElementById('connectButton')!.addEventListener('click', async () => 
 });
 
 
-let Gprevtime=0;
+
 // 入力を処理する関数
 function handleInputs(inputs: KeyInput[]) {
   const time=performance.now();
@@ -125,7 +125,7 @@ function handleInputs(inputs: KeyInput[]) {
     
     const key = window.analogsense.scancodeToString(input.scancode);
     //console.log(`Key: ${key}, Value: ${input.value},dt:${time-Gprevtime},len:${mapData[key]?.length||0}`);
-    Gprevtime=time;
+    
     let num2={x:input.value,y: time};
     if(!mapData[key]){
       mapData[key]=[];
