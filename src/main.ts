@@ -151,6 +151,7 @@ function handleInputs(inputs: KeyInput[]) {
       // 押し込み具合が閾値未満で、かつ押し込みデータが存在する場合は、キーが離されたと判断して処理を行う
       mapData[key].push(num2);
 
+
       // 結果データに追加
       resultData.push({key: key, values: mapData[key].slice()});
       mapData[key] = [];
@@ -396,7 +397,7 @@ document.getElementById('downloadButton')!.addEventListener('click', () => {
   resultData.forEach((data) => {
     const key = data.key;
     if(!formatData.find((d) => d.key === key)){
-      formatData.push({key: key, values: []});
+      formatData.push({key: key, values: data.values.slice()});
     }else{
       const index=formatData.findIndex((d) => d.key === key);
       formatData[index].values.push(...data.values);
