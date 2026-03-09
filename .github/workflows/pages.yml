@@ -21,6 +21,7 @@ jobs:
       - run: npm ci
         
       - run: npm run build
+      - run: cp node_modules/coi-serviceworker/coi-serviceworker.js dist/
         
       - uses: actions/configure-pages@v4
       - uses: actions/upload-pages-artifact@v4

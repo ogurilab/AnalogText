@@ -63,7 +63,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     
     
     <div>
-      <label for="isVelocity">Velocity Mode</label>
+      
       
       <label for="heatmap">Heatmap Output Multiplier: ${outputMulti}</label>
       <input type="range" id="heatmap" min="1" max="1000" step="0.01" value="${outputMulti}">
