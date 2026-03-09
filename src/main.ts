@@ -51,6 +51,9 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <div id="header">
       <h1>Analog Text</h1>
     </div>
+    <div id ="keyCount">
+      Keys Pressed: 0
+    </div>
     <div id="CrossOrigin">
       ${window.crossOriginIsolated ? 'Cross-Origin Isolated: Yes' : 'Cross-Origin Isolated: No'}
     </div>
@@ -151,6 +154,7 @@ function handleInputs(inputs: KeyInput[]) {
       // 結果データに追加
       resultData.push({key: key, values: mapData[key].slice()});
       mapData[key] = [];
+      document.getElementById('keyCount')!.textContent = `Keys Pressed: ${resultData.length}`;
     }
     
       
