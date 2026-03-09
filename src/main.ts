@@ -136,15 +136,23 @@ function handleInputs(inputs: KeyInput[]) {
     if(!mapData[key]){
       mapData[key]=[];
     }
-    if(input.value < threshold){
-      mapData[key]=[];
-  
-    }
+    
     // もし押し込み具合が閾値以上なら、押し込みデータに追加
     if(input.value >= threshold)
     {
       mapData[key].push(num2);
+      
     }
+    else if(mapData[key].length>0)
+    {
+      // 押し込み具合が閾値未満で、かつ押し込みデータが存在する場合は、キーが離されたと判断して処理を行う
+      mapData[key].push(num2);
+
+      // 結果データに追加
+      resultData.push({key: key, values: mapData[key].slice()});
+      mapData[key] = [];
+    }
+    
       
     // 押し込み具合が前回の物から下降している、もしくはキーがそこを打った場合キー打たれたと判断
     const values=mapData[key];
@@ -158,19 +166,18 @@ function handleInputs(inputs: KeyInput[]) {
       if((prepreValue<=prevValue&&prevValue>currentValue)){
         // キーが離されたときの処理
         console.log(`Key ${key} released`);
-        // 結果データに追加
-        resultData.push({key: key, values: values.slice()});
+        
         const avragevelocity=prevValue/(prevTime==0 ? 0.00001 : prevTime);
         const maxDepth=prevValue;
         console.log(`Velocity: ${avragevelocity}, Depth: ${maxDepth},time:${prevTime}`);
-        if(document.activeElement&&document.activeElement.parentElement?.id==='IME_List'){
-          (document.activeElement as HTMLButtonElement).click();
-          // 押し込みデータをリセット
-          mapData[key] = [];
-          // 文字の色を更新
-          OutputResultData();
-          return;
-        }
+        // if(document.activeElement&&document.activeElement.parentElement?.id==='IME_List'){
+        //   (document.activeElement as HTMLButtonElement).click();
+        //   // 押し込みデータをリセット
+        //   mapData[key] = [];
+        //   // 文字の色を更新
+        //   OutputResultData();
+        //   return;
+        // }
         
         //キーイベントをFakeInputに送信
         if(key===imeToggleKey){
@@ -190,8 +197,7 @@ function handleInputs(inputs: KeyInput[]) {
           ReloadIMEList();
         }, 100);
         }
-         // 押し込みデータをリセット
-        mapData[key] = [];
+        
         // 文字の色を更新
         OutputResultData();
 
