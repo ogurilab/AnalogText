@@ -379,9 +379,6 @@ function ReloadIMEList(){
 
 document.body.appendChild(document.createElement('textarea')).innerHTML='ここには書けない'; // テキストエリアを追加して、IMEの入力を受け付ける
 
-window.document.onkeydown = function (e) {
-  
-}
 document.getElementById('downloadButton')!.addEventListener('click', () => {
   //csv形式でデータを整形
   let csvContent = "";
