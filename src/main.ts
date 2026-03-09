@@ -1,6 +1,6 @@
-import type { Device, KeyInput } from '../public/analogsense';
+import type { Device, KeyInput } from './analogsense';
 import { onKeyEvent } from './Fakeinput/main';
-import { keys } from '../public/analogsense';
+import { keys } from './analogsense';
 import './style.css'
 import { ToggleIME } from './Fakeinput/main';
 import { IsIMEActive, IsinComposition,endComposition } from './Fakeinput/main';
@@ -46,9 +46,13 @@ const resultData:keydata[] = [];
 
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
+
   <div>
     <div id="header">
       <h1>Analog Text</h1>
+    </div>
+    <div id="CrossOrigin">
+      ${window.crossOriginIsolated ? 'Cross-Origin Isolated: Yes' : 'Cross-Origin Isolated: No'}
     </div>
     <div id= "connect">
       <button id="connectButton">Connect to Analog Text Device</button>
@@ -64,7 +68,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       <label for="heatmap">Heatmap Output Multiplier: ${outputMulti}</label>
       <input type="range" id="heatmap" min="1" max="1000" step="0.01" value="${outputMulti}">
     </div>
-   
+    <button id="downloadButton">Download Result Data</button>
   </div>
 `
 
@@ -81,6 +85,7 @@ document.querySelector<HTMLSelectElement>('#modeSelect')!.addEventListener('chan
 
 
 });
+
 
 
 // デバイスを認識、HandleInputs関数で入力を処理
@@ -115,6 +120,7 @@ document.getElementById('connectButton')!.addEventListener('click', async () => 
     
     
 });
+
 
 
 
@@ -157,7 +163,14 @@ function handleInputs(inputs: KeyInput[]) {
         const avragevelocity=prevValue/(prevTime==0 ? 0.00001 : prevTime);
         const maxDepth=prevValue;
         console.log(`Velocity: ${avragevelocity}, Depth: ${maxDepth},time:${prevTime}`);
-        
+        if(document.activeElement&&document.activeElement.parentElement?.id==='IME_List'){
+          (document.activeElement as HTMLButtonElement).click();
+          // 押し込みデータをリセット
+          mapData[key] = [];
+          // 文字の色を更新
+          OutputResultData();
+          return;
+        }
         
         //キーイベントをFakeInputに送信
         if(key===imeToggleKey){
@@ -165,6 +178,7 @@ function handleInputs(inputs: KeyInput[]) {
         }
         else if(IsIMEActive()&& IsinComposition()&&(key=== 'Enter'|| key==='Space')){
           if(key==='Enter'){
+            console.log('Enter has pushed End Composition');
             endComposition();
           }
           if(key==='Space'){
@@ -176,12 +190,12 @@ function handleInputs(inputs: KeyInput[]) {
           ReloadIMEList();
         }, 100);
         }
-        
-
-        // 押し込みデータをリセット
+         // 押し込みデータをリセット
         mapData[key] = [];
         // 文字の色を更新
         OutputResultData();
+
+       
       }
     }
 
@@ -279,7 +293,16 @@ function ReloadIMEList(){
             const candidates = response[0][1];
             candidates.forEach((candidate: string) => {
               const candidateElement = document.createElement('button');
+              candidateElement.type = 'button';
               candidateElement.textContent = candidate;
+              // スペースキーでボタンがアクティブ化されるのを防ぐ
+              candidateElement.addEventListener('keydown', (e: KeyboardEvent) => {
+                if (e.key === ' ' || e.code === 'Space') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  return false;
+                }
+              });
               candidateElement.addEventListener('click', () => {
                 const inputDiv = document.getElementById('inputArea') as HTMLDivElement;
                 const spans = inputDiv.querySelectorAll('span');
@@ -351,5 +374,73 @@ function ReloadIMEList(){
     }
     (buttons[nextIndex] as HTMLButtonElement).focus();
   }
+
+  // キーボードを無効化
+
+document.body.appendChild(document.createElement('textarea')).innerHTML='ここには書けない'; // テキストエリアを追加して、IMEの入力を受け付ける
+
+window.document.onkeydown = function (e) {
+  
+}
+document.getElementById('downloadButton')!.addEventListener('click', () => {
+  //csv形式でデータを整形
+  let csvContent = "";
+  let formatData:keydata[]=[];
+  resultData.forEach((data) => {
+    const key = data.key;
+    if(!formatData.find((d) => d.key === key)){
+      formatData.push({key: key, values: []});
+    }else{
+      const index=formatData.findIndex((d) => d.key === key);
+      formatData[index].values.push(...data.values);
+    }
+  });
+  let table : string[][] = [];
+  let keysList:string[]=[];
+  let timeList:number[]=[];
+  
+  formatData.forEach((data) => {
+    const key = data.key;
+    keysList.push(key);
+    data.values.forEach((value) => {
+      const time=value.y;
+      if(!timeList.includes(time)){
+        timeList.push(time);
+      }
+    });
+  });
+  timeList.sort();
+  
+  
+  table.unshift(['time', ...timeList.map(t => t.toString())]); // ヘッダー行を追加
+  formatData.forEach((data) => {
+    const key = data.key;
+    let row:number[] = [];
+    timeList.forEach((time) => {
+      const value = data.values.find((v) => v.y === time);
+      if(value){
+        row.push(value.x);
+      }else{
+        row.push(0);
+      }
+    });
+    table.push([key, ...row.map(x => x.toString())]);
+  });
+  let i=0;
+  table.forEach((row) => {
+    csvContent +=  row.join(",") + "\n";
+    i++;
+  });
+  downLoadTXT(csvContent, 'result_data.csv');
+});
+
+function downLoadTXT(text: string, filename: string) {
+    // TXTをダウンロードする
+    let blob = new Blob([text], {type: "text/plain"});
+    let link = document.createElement("a"); // aタグのエレメントを作成
+    link.href = window.URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+}
 
 

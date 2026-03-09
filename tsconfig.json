@@ -22,5 +22,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src", "public/analogsense.js", "public/analogsense.d.ts"]
+  "include": ["src", "src/analogsense.js", "src/analogsense.d.ts"]
 }
